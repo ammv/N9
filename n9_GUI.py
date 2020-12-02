@@ -44,7 +44,7 @@ def insert_text2(message):
     text2.insert('1.0', message)
 
 
-def paste():
+def paste_text():
     text.delete('1.0', END)
     text.insert('1.0', root.clipboard_get())
 
@@ -67,18 +67,18 @@ def get_key():
 
 
 def encode():
-    # try:
-    text = get_text()
-    key = get_key()
-    encoded_text = N9.encode(text, key)
+    try:
+        text = get_text()
+        key = get_key()
+        encoded_text = N9.encode(text, key)
 
-    text2.delete('1.0', END)
-    text2.insert('1.0', encoded_text.strip())
+        text2.delete('1.0', END)
+        text2.insert('1.0', encoded_text.strip())
 
 
-# except:
-# text2.delete('1.0', END)
-# text2.insert('1.0', 'Bad key or bad encoded text. Try again')
+    except:
+        text2.delete('1.0', END)
+        text2.insert('1.0', 'Bad key or bad encoded text. Try again')
 
 
 def decode():
@@ -96,22 +96,22 @@ def decode():
 
 def deep_encode():
     def start_deep_encode():
-        N = entry_encode.get()
-        if N.isdigit():
-            if int(N) > 999:
-                messagebox.showwarning('Ошибка', 'Слишком большое число')
+        n = entry_encode.get()
+        if n.isdigit():
+            if int(n) > 10:
+                messagebox.showwarning('Ошибка', 'Максимальное число 10')
             else:
-                N = int(N)
+                n = int(n)
                 key = get_key()
                 message = get_text()
-                while N != 0:
+                while n != 0:
                     message = N9.encode(message, key)
-                    N -= 1
+                    n -= 1
 
                 insert_text2(message)
 
         else:
-            messagebox.showwarning('Ошибка', 'Вы должны ввести число меньше')
+            messagebox.showwarning('Ошибка', 'Вы должны ввести число')
 
     deep = Tk()
     createwindow(deep, '')
@@ -125,25 +125,25 @@ def deep_encode():
     button_decode = Button(deep, text='Кодировать', bd=2, command=start_deep_encode)
     button_decode.place(relx=0.4, rely=0.45)
 
-
 def deep_decode():
     def start_deep_decode():
-        N = entry_decode.get()
-        if N.isdigit():
-            if int(N) > 999:
-                messagebox.showwarning('Ошибка', 'Слишком большое число')
+        n = entry_decode.get()
+        if n.isdigit():
+            if int(n) > 10:
+                messagebox.showwarning('Ошибка', 'Максимальное число 10')
             else:
-                N = int(N)
+                n = int(n)
                 key = get_key()
                 message = get_text()
-                while N != 0:
+                while n != 0:
                     message = N9.decode(message, key)
-                    N -= 1
+                    n -= 1
 
                 insert_text2(message)
 
         else:
-            messagebox.showwarning('Ошибка', 'Вы должны ввести число меньше')
+            messagebox.showwarning('Ошибка', 'Вы должны ввести число')
+
 
     deep = Tk()
     createwindow(deep, '')
@@ -183,7 +183,7 @@ button2.grid(row=0, column=3)
 button3 = Button(root, text='Очистить', bd=2, bg='#fcc', command=clear)
 button3.grid(row=0, column=4)
 
-button4 = Button(root, text='📋', fg='#1E90FF', font='10', command=paste)
+button4 = Button(root, text='📋', fg='#1E90FF', font='10', command=paste_text)
 button4.place(relx=0.01, rely=0.06)
 
 entry = Entry(root, bd=1, font="Tahoma 12", bg='#bcd', width=30)
@@ -211,6 +211,7 @@ deep.add_command(label="Глубокое раскодирование", command=
 mainmenu.add_cascade(label='Прочее', menu=deep)
 
 root.bind('<Control-c>', copy)
+root.bind('<Control-C>', copy)
 
 if __name__ == '__main__':
     root.mainloop()
