@@ -26,7 +26,7 @@ class N9:
         decoded_text = ''
 
         for i, value in enumerate(text):
-            const = nums[i - 1] ^ (len(text) // len(key) ^ (len(key) ^ i * const2)) % 256
+            x = nums[i - 1] ^ (len(text) // len(key) ^ (len(key) ^ i * const2)) % 256
 
             lentext = len(text)
             shift = int(bin(lentext)[-1]) + int(bin(i)[-1])
@@ -37,14 +37,14 @@ class N9:
             if shift < 1:
                 #value = (ord(value) + nums[i] ^ const1 ^ const) ^ shift2
                 value = int(value) ^ shift2
-                value = value ^ const
+                value = value ^ x
                 value = value ^ const1
                 value -= nums[i]
             else:
                 #value = (ord(value) + nums[i] ^ const1 ^ const) ^ shift2 ^ i
                 value = int(value) ^ i
                 value = value ^ shift2
-                value = value ^ const
+                value = value ^ x
                 value = value ^ const1
                 value -= nums[i]
 
@@ -93,7 +93,7 @@ class N9:
         encoded_text = ''
         for i, value in enumerate(text):
 
-            const = nums[i-1] ^ (len(text)//len(key) ^ (len(key) ^ i*const2)) % 256
+            x = nums[i-1] ^ (len(text)//len(key) ^ (len(key) ^ i*const2)) % 256
             lentext = len(text)
             shift = int(bin(lentext)[-1]) + int(bin(i)[-1])
             shift2 = (nums[i]//10) * (shift + 1)
@@ -101,9 +101,9 @@ class N9:
             shift2 = int(shift2[2:])
 
             if shift < 1:
-                value = (ord(value) + nums[i] ^ const1 ^ const) ^ shift2
+                value = (ord(value) + nums[i] ^ const1 ^ x) ^ shift2
             else:
-                value = (ord(value) + nums[i] ^ const1 ^ const) ^ shift2 ^ i
+                value = (ord(value) + nums[i] ^ const1 ^ x) ^ shift2 ^ i
 
             encoded_text += str(value) + ' '
 
