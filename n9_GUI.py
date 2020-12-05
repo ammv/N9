@@ -1,309 +1,325 @@
+import time
 from tkinter import *
 from tkinter import messagebox
 from n9 import N9
 
 
-def set_window(root):
-    root.title('N9')
-    root.resizable(True, True)
+class Application:
 
-    w = 800
-    h = 600
-    ws = root.winfo_screenwidth()
-    wh = root.winfo_screenheight()
+    def __init__(self, master=None):
 
-    x = ws // 2 - w // 2
-    y = wh // 2 - h // 2
+        self.master = master
+        self.set_window()
+        self.create_default_widgets()
+        self.create_menu()
 
-    root.geometry(f'{w}x{h}+{x}+{y}')
+    def set_window(self):
 
+        self.master.title('N9')
+        self.master.resizable(True, True)
 
-def create_window(window, title):
-    window.title(title)
-    window.resizable(False, False)
+        w = 800
+        h = 600
+        ws = self.master.winfo_screenwidth()
+        wh = self.master.winfo_screenheight()
 
-    w = 180
-    h = 60
-    ws = window.winfo_screenwidth()
-    wh = window.winfo_screenheight()
+        x = ws // 2 - w // 2
+        y = wh // 2 - h // 2
 
-    x = ws // 2 - w // 2
-    y = wh // 2 - h // 2
+        self.master.geometry(f'{w}x{h}+{x}+{y}')
 
-    window.geometry(f'{w}x{h}+{x}+{y}')
+    def create_default_widgets(self):
 
+        self.key_label = Label(self.master, text="Ключ ", font="Tahoma 20")
+        self.key_label.grid(row=0, column=0)
 
-def copy():
-    try:
-        widget = root.focus_get()
-        root.clipboard_clear()
-        root.clipboard_append(widget.selection_get())
-    except:
-        pass
+        self.input_label = Label(self.master, text="Текст", font="Tahoma 14")
+        self.input_label.place(relx=0.2, rely=0.07)
 
+        self.output_label = Label(self.master, text="Вывод", font="Tahoma 14")
+        self.output_label.place(relx=0.7, rely=0.07)
 
-def paste():
-    try:
-        widget = root.focus_get()
-        if 'entry' in str(widget):
-            widget.insert(0, root.clipboard_get())
-        else:
-            widget.insert('1.0', root.clipboard_get())
-    except:
-        pass
+        self.encode_btn = Button(self.master, text='Кодировать', bd=2, bg="#fcc", command=self.encode)
+        self.encode_btn.grid(row=0, column=2)
 
+        self.decode_btn = Button(self.master, text='Раскодировать', bd=2, bg="#fcc", command=self.decode)
+        self.decode_btn.grid(row=0, column=3)
 
-def cut():
-    try:
-        widget = root.focus_get()
-        root.clipboard_clear()
-        root.clipboard_append(widget.selection_get())
+        self.clear_btn = Button(self.master, text='Очистить', bd=2, bg='#fcc', command=self.clear)
+        self.clear_btn.grid(row=0, column=4)
 
-        widget.delete('1.0', END)
-    except:
-        pass
+        self.transform_btn = Button(self.master, bd=2, text='⇄', bg='#fcc', command=self.transform)
+        self.transform_btn.grid(row=0, column=5)
 
+        self.paste_btn = Button(self.master, text='📋', fg='#1E90FF', font='10', command=self.paste_input)
+        self.paste_btn.place(relx=0.01, rely=0.06)
 
-def delete():
-    try:
-        widget = root.focus_get()
-        widget.delete('sel.first', 'sel.last')
-    except:
-        pass
+        self.clear_input = Button(self.master, font='10', text='X', fg='#f00', command=self.clear_input)
+        self.clear_input.place(relx=0.05, rely=0.06)
 
+        self.copy_output_btn = Button(self.master, text='📄', fg='#1E90FF', font='10', command=self.copy_output)
+        self.copy_output_btn.place(relx=0.5, rely=0.06)
 
-def insert_text(message):
-    text.delete('1.0', END)
-    text.insert('1.0', message)
+        self.clear_output_btn = Button(self.master, text='X', fg='#f00', font='10', command=self.clear_output)
+        self.clear_output_btn.place(relx=0.54, rely=0.06)
 
+        self.key_entry = Entry(self.master, bd=1, font="Tahoma 12", bg='#bcd', width=35)
+        self.key_entry.bind('<Button-3>', self.show_text_menu)
+        self.key_entry.grid(row=0, column=1)
 
-def insert_text2(message):
-    text2.delete('1.0', END)
-    text2.insert('1.0', message)
+        self.input_text = Text(self.master, bd=1.2, bg='white', width=42, height=27, font='Tahoma 12')
+        self.input_text.bind('<Button-3>', self.show_text_menu)
 
+        self.scrollbar = Scrollbar(self.master, command=self.input_text.yview, orient=VERTICAL)
 
-def show_text_menu(event):
-    text_menu.post(event.x_root, event.y_root)
+        self.input_text['yscrollcommand'] = self.scrollbar.set
+        self.input_text.place(relx=0.00325, rely=0.125)
 
+        self.output_text = Text(self.master, bd=1.2, bg='white', width=42, height=27, font='Tahoma 12')
+        self.output_text.bind('<Button-3>', self.show_text_menu)
 
-def paste_text():
-    text.delete('1.0', END)
-    text.insert('1.0', root.clipboard_get())
+        self.scrollbar2 = Scrollbar(root, command=self.output_text.yview, orient=VERTICAL)
 
+        self.output_text['yscrollcommand'] = self.scrollbar2.set
+        self.output_text.place(relx=0.5, rely=0.125)
 
-def copy_text2():
-    try:
-        root.clipboard_clear()
-        root.clipboard_append(get_text2())
-    except:
-        pass
+        self.scrollbar.place(in_=self.input_text, relx=1.0, relheight=1.0, bordermode="outside")
+        self.scrollbar2.place(in_=self.output_text, relx=1.0, relheight=1.0, bordermode="outside")
 
+    def create_menu(self):
 
-def clear():
-    text.delete('1.0', END)
-    text2.delete('1.0', END)
+        self.top_menu = Menu(self.master)
+        self.master.config(menu=self.top_menu)
 
+        self.deep_menu = Menu(self.master, tearoff=0)
+        self.deep_menu.add_command(label="Глубокое кодирование", command=self.deep_encode)
+        self.deep_menu.add_command(label="Глубокое раскодирование", command=self.deep_decode)
+        self.deep_menu.add_separator()
+        self.deep_menu.add_command(label="Файл", command=self.file_encode)
+        self.deep_menu.add_command(label="История", command=self.history)
 
-def clear_text():
-    text.delete('1.0', END)
+        self.text_menu = Menu(self.master, tearoff=0)
+        self.text_menu.add_command(label="Вставить", command=self.text_menu_paste)
+        self.text_menu.add_command(label="Копировать", command=self.text_menu_copy)
+        self.text_menu.add_command(label="Вырезать", command=self.text_menu_cut)
+        self.text_menu.add_command(label="Удалить", command=self.text_menu_delete)
 
+        self.top_menu.add_cascade(label='Прочее', menu=self.deep_menu)
 
-def clear_text2():
-    text2.delete('1.0', END)
+    def encode(self):
+        text = self.input_text.get('1.0', END).strip()
+        key = self.key_entry.get().strip()
+        try:
+            encoded_text = N9.encode(text, key)
+            self.output_text.delete('1.0', END)
+            self.output_text.insert('1.0', encoded_text)
 
+        except:
+            error = 'Bad key or bad encoded text. Try again'
+            self.output_text.delete('1.0', END)
+            self.output_text.insert('1.0', error)
 
-def get_text():
-    return text.get('1.0', END).strip()
+    def decode(self):
+        text = self.input_text.get('1.0', END).strip()
+        key = self.key_entry.get().strip()
+        try:
+            decoded_text = N9.decode(text, key)
+            self.output_text.delete('1.0', END)
+            self.output_text.insert('1.0', decoded_text)
 
+        except:
+            error = 'Bad key or bad encoded text. Try again'
+            self.output_text.delete('1.0', END)
+            self.output_text.insert('1.0', error)
 
-def get_text2():
-    return text2.get('1.0', END).strip()
+    def clear(self):
+        self.input_text.delete('1.0', END)
+        self.output_text.delete('1.0', END)
 
+    def transform(self):
+        input_text = self.input_text.get('1.0', END)
+        output_text = self.output_text.get('1.0', END)
 
-def get_key():
-    return entry.get().strip()
+        self.input_text.delete('1.0', END)
+        self.output_text.delete('1.0', END)
 
+        self.input_text.insert('1.0', output_text)
+        self.output_text.insert('1.0', input_text)
 
-def encode():
-    try:
-        text = get_text()
-        key = get_key()
-        encoded_text = N9.encode(text, key)
+    def paste_input(self):
+        try:
+            text = self.master.clipboard_get()
+            self.input_text.delete('1.0', END)
+            self.input_text.insert('1.0', text)
 
-        text2.delete('1.0', END)
-        text2.insert('1.0', encoded_text.strip())
+        except:
+            pass
 
+    def clear_input(self):
+        self.input_text.delete('1.0', END)
 
-    except:
-        text2.delete('1.0', END)
-        text2.insert('1.0', 'Bad key or bad encoded text. Try again')
+    def clear_output(self):
+        self.output_text.delete('1.0', END)
 
+    def copy_output(self):
+        text = self.output_text.get('1.0', END)
+        self.master.clipboard_clear()
+        self.master.clipboard_append(text)
 
-def transform():
-    message = get_text()
-    message2 = get_text2()
-    clear()
-    insert_text(message2)
-    insert_text2(message)
+    def show_text_menu(self, event):
+        self.text_menu.post(event.x_root, event.y_root)
 
+    def text_menu_delete(self):
+        try:
+            widget = self.master.focus_get()
+            widget.delete('sel.first', 'sel.last')
+        except:
+            pass
 
-def decode():
-    try:
-        text = get_text()
-        key = get_key()
-        decoded_text = N9.decode(text, key)
+    def text_menu_copy(self):
+        try:
+            widget = self.master.focus_get()
+            self.master.clipboard_clear()
+            self.master.clipboard_append(widget.selection_get())
+        except:
+            pass
 
-        text2.delete('1.0', END)
-        text2.insert('1.0', decoded_text.strip())
-    except:
-        text2.delete('1.0', END)
-        text2.insert('1.0', 'Bad key or bad encoded text. Try again')
+    def text_menu_cut(self):
+        try:
+            widget = self.master.focus_get()
+            self.master.clipboard_clear()
+            self.master.clipboard_append(widget.selection_get())
 
+            widget.delete('1.0', END)
+        except:
+            pass
 
-def deep_encode():
-    def start_deep_encode():
-        n = entry_encode.get()
-        if n.isdigit():
-            if int(n) > 10:
-                messagebox.showwarning('Ошибка', 'Максимальное число 10')
-                deep.deiconify()
+    def text_menu_paste(self):
+        try:
+            widget = self.master.focus_get()
+            if 'entry' in str(widget):
+                widget.insert(0, self.master.clipboard_get())
             else:
-                n = int(n)
-                key = get_key()
-                message = get_text()
-                while n != 0:
-                    message = N9.encode(message, key)
-                    n -= 1
+                widget.insert('1.0', self.master.clipboard_get())
+        except:
+            pass
 
-                insert_text2(message)
+    def deep_encode(self):
+        self.deep_encode = Tk()
+        self.create_window(self.deep_encode, '')
+
+        self.label_encode = Label(self.deep_encode, text="Уровень ", font="Tahoma 11")
+        self.label_encode.grid(row=0, column=0)
+
+        self.entry_encode = Entry(self.deep_encode, bd=1, font="Tahoma 11", width=10)
+        self.entry_encode.grid(row=0, column=1)
+
+        self.button_encode = Button(self.deep_encode, text='Раскодировать', bd=2, command=self.start_deep_encode)
+        self.button_encode.place(relx=0.36, rely=0.45)
+
+        self.deep_encode.mainloop()
+
+    def deep_decode(self):
+        self.deep_decode = Tk()
+        self.create_window(self.deep_decode, '')
+
+        self.label_decode = Label(self.deep_decode, text="Уровень ", font="Tahoma 11")
+        self.label_decode.grid(row=0, column=0)
+
+        self.entry_decode = Entry(self.deep_decode, bd=1, font="Tahoma 11", width=10)
+        self.entry_decode.grid(row=0, column=1)
+
+        self.button_decode = Button(self.deep_decode, text='Раскодировать', bd=2, command=self.start_deep_decode)
+        self.button_decode.place(relx=0.36, rely=0.45)
+
+        self.deep_decode.mainloop()
+
+    def start_deep_encode(self):
+        N = self.entry_encode.get()
+        if N.isdigit():
+            if int(N) > 1_000_000:
+                messagebox.showwarning('Ошибка', 'Максимальное число 1 000 000')
+                self.deep_encode.deiconify()
+
+            else:
+                try:
+                    key = self.key_entry.get()
+                    text = self.input_text.get('1.0', END).strip()
+
+                    message = N9.encode(text, key, int(N))
+
+                    self.output_text.delete('1.0', END)
+                    self.output_text.insert('1.0', message)
+                except:
+                    messagebox.showwarning('Ошибка', 'Пустой ключ или пустой текст!')
+                    self.deep_encode.deiconify()
 
         else:
             messagebox.showwarning('Ошибка', 'Вы должны ввести число')
-            deep.deiconify()
+            self.deep_encode.deiconify()
 
-    deep = Tk()
-    create_window(deep, '')
+    def start_deep_decode(self):
+        N = self.entry_decode.get()
+        if N.isdigit():
+            if int(N) > 1_000_000:
+                messagebox.showwarning('Ошибка', 'Максимальное число 1 000 000')
+                self.deep_decode.deiconify()
 
-    label_encode = Label(deep, text="Уровень ", font="Tahoma 11")
-    label_encode.grid(row=0, column=0)
-
-    entry_encode = Entry(deep, bd=1, font="Tahoma 11", width=10)
-    entry_encode.grid(row=0, column=1)
-
-    button_decode = Button(deep, text='Кодировать', bd=2, command=start_deep_encode)
-    button_decode.place(relx=0.4, rely=0.45)
-
-    deep.mainloop()
-
-def deep_decode():
-    def start_deep_decode():
-        n = entry_decode.get()
-        if n.isdigit():
-            if int(n) > 10:
-                messagebox.showwarning('Ошибка', 'Максимальное число 10')
-                deep.deiconify()
             else:
-                n = int(n)
-                key = get_key()
-                message = get_text()
-                while n != 0:
-                    message = N9.decode(message, key)
-                    n -= 1
+                #try:
+                    key = self.key_entry.get()
+                    text = self.input_text.get('1.0', END).strip()
 
-                insert_text2(message)
+                    message = N9.decode(text, key, int(N))
+
+                    self.output_text.delete('1.0', END)
+                    self.output_text.insert('1.0', message)
+
+                #except:
+                    #messagebox.showwarning('Ошибка', 'Пустой ключ или пустой текст!')
+                    #self.deep_decode.deiconify()
 
         else:
             messagebox.showwarning('Ошибка', 'Вы должны ввести число')
-            deep.deiconify()
+            self.deep_encode.deiconify()
 
+    def file_encode(self):
+        pass
 
-    deep = Tk()
-    create_window(deep, '')
+    def history(self):
+        pass
 
-    label_decode = Label(deep, text="Уровень ", font="Tahoma 11")
-    label_decode.grid(row=0, column=0)
+    def create_window(self, window, title):
+        window.title(title)
+        window.resizable(False, False)
 
-    entry_decode = Entry(deep, bd=1, font="Tahoma 11", width=10)
-    entry_decode.grid(row=0, column=1)
+        w = 180
+        h = 60
+        ws = window.winfo_screenwidth()
+        wh = window.winfo_screenheight()
 
-    button_decode = Button(deep, text='Раскодировать', bd=2, command=start_deep_decode)
-    button_decode.place(relx=0.36, rely=0.45)
+        x = ws // 2 - w // 2
+        y = wh // 2 - h // 2
 
-    deep.mainloop()
+        window.geometry(f'{w}x{h}+{x}+{y}')
+
+    def closing(self):
+        if messagebox.askokcancel("Quit", "Do you want to quit?"):
+            try: self.deep_encode.destroy()
+            except: pass
+
+            try: self.deep_decode.destroy()
+            except: pass
+
+            self.master.destroy()
+
+    def mainloop(self):
+        self.master.protocol("WM_DELETE_WINDOW", self.closing)
+        self.master.mainloop()
 
 
 root = Tk()
-set_window(root)
-
-top_menu = Menu(root)
-
-root.config(menu=top_menu)
-
-label1 = Label(root, text="Ключ ", font="Tahoma 20")
-label1.grid(row=0, column=0)
-
-label2 = Label(root, text="Текст", font="Tahoma 14")
-label2.place(relx=0.2, rely=0.07)
-
-label3 = Label(root, text="Вывод", font="Tahoma 14")
-label3.place(relx=0.7, rely=0.07)
-
-button = Button(root, text='Кодировать', bd=2, bg="#fcc", command=encode)
-button.grid(row=0, column=2)
-
-button2 = Button(root, text='Раскодировать', bd=2, bg="#fcc", command=decode)
-button2.grid(row=0, column=3)
-
-button3 = Button(root, text='Очистить', bd=2, bg='#fcc', command=clear)
-button3.grid(row=0, column=4)
-
-button4 = Button(root, bd=2, text='⇄', bg='#fcc', command=transform)
-button4.grid(row=0, column=5)
-
-button5 = Button(root, text='📋', fg='#1E90FF', font='10', command=paste_text)
-button5.place(relx=0.01, rely=0.06)
-
-button6 = Button(root, font='10', text='X', fg='#f00', command=clear_text)
-button6.place(relx=0.05, rely=0.06)
-
-button7 = Button(root, text='📄', fg='#1E90FF', font='10', command=copy_text2)
-button7.place(relx=0.5, rely=0.06)
-
-button8 = Button(root, text='X', fg='#f00', font='10', command=clear_text2)
-button8.place(relx=0.54, rely=0.06)
-
-entry = Entry(root, bd=1, font="Tahoma 12", bg='#bcd', width=35)
-entry.bind('<Button-3>', show_text_menu)
-entry.grid(row=0, column=1)
-
-text = Text(root, bd=1.2, bg='white', width=42, height=27, font='Tahoma 12')
-text.bind('<Button-3>', show_text_menu)
-scrollbar = Scrollbar(root, command=text.yview, orient=VERTICAL)
-
-text['yscrollcommand'] = scrollbar.set
-text.place(relx=0.00325, rely=0.125)
-
-text2 = Text(root, bd=1.2, bg='white', width=42, height=27, font='Tahoma 12')
-text2.bind('<Button-3>', show_text_menu)
-scrollbar2 = Scrollbar(root, command=text2.yview, orient=VERTICAL)
-
-text2['yscrollcommand'] = scrollbar2.set
-text2.place(relx=0.5, rely=0.125)
-
-scrollbar.place(in_=text, relx=1.0, relheight=1.0, bordermode="outside")
-scrollbar2.place(in_=text2, relx=1.0, relheight=1.0, bordermode="outside")
-
-deep_menu = Menu(root, tearoff=0)
-deep_menu.add_command(label="Глубокое кодирование", command=deep_encode)
-deep_menu.add_command(label="Глубокое раскодирование", command=deep_decode)
-
-text_menu = Menu(root, tearoff=0)
-text_menu.add_command(label="Вставить", command=paste)
-text_menu.add_command(label="Копировать", command=copy)
-text_menu.add_command(label="Вырезать", command=cut)
-text_menu.add_command(label="Удалить", command=delete)
-
-top_menu.add_cascade(label='Прочее', menu=deep_menu)
+app = Application(root)
 
 if __name__ == '__main__':
-    root.mainloop()
+    app.mainloop()
